@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Best Model: Us</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- LIBS -->
+<script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+<!-- FONTS -->
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%}
+
+body{
+  background:radial-gradient(circle at top,#0b0d1a,#05050a 70%);
+  color:#eaeaff;
+  font-family:Inter,system-ui;
+  overflow:hidden;
+}
+
+/* background canvas */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:-2;
+}
+
+/* soft blur overlay */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  backdrop-filter:blur(10px);
+  pointer-events:none;
+  z-index:-1;
+}
+
+/* ---------- GLOBAL ---------- */
+section{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+/* ---------- INTRO ---------- */
+#intro h1{
+  font-size:2.7rem;
+  letter-spacing:.5px;
+}
+
+/* ---------- SLIDER ---------- */
+#slider-section{display:none}
+.slide{position:absolute;opacity:0}
+.slide img{
+  width:420px;
+  border-radius:24px;
+  box-shadow:0 50px 100px rgba(0,0,0,.55);
+}
+.slide p{
+  margin-top:18px;
+  color:#b8c0ff;
+}
+
+/* Ken Burns */
+.kenburns{animation:ken 6s ease-in-out forwards}
+@keyframes ken{
+  from{transform:scale(1)}
+  to{transform:scale(1.08)}
+}
+
+/* ---------- CAKE ---------- */
+#cake-section{display:none}
+.cake{
+  position:relative;
+  width:440px;
+  height:360px;
+}
+.plate{
+  position:absolute;
+  width:480px;height:22px;
+  background:#cfcfcf;
+  border-radius:50%;
+  bottom:-12px;left:-20px;
+}
+.layer{
+  position:absolute;
+  width:440px;height:78px;
+  border-radius:22px;
+}
+.layer-bottom{bottom:0;background:#ffb6c1}
+.layer-middle{bottom:78px;background:#ffc0cb}
+.layer-top{bottom:156px;background:#ffd1dc}
+
+.cake-text{
+  position:absolute;
+  top:124px;
+  width:100%;
+  text-align:center;
+  font-size:1.6rem;
+  font-weight:600;
+  color:#632d7a;
+}
+
+/* candles FIXED */
+.candle{
+  position:absolute;
+  width:16px;height:52px;
+  background:#fff;
+  top:96px;
+}
+.c1{left:180px}
+.c2{left:220px}
+.c3{left:260px}
+
+.candle::after{
+  content:"";
+  position:absolute;
+  top:-20px;
+  width:16px;height:22px;
+  background:orange;
+  border-radius:50%;
+  animation:flicker .15s infinite;
+}
+.candle.out::after{display:none}
+
+@keyframes flicker{
+  0%{transform:scale(1)}
+  50%{transform:scale(.75)}
+  100%{transform:scale(1)}
+}
+
+/* ---------- ENVELOPE ---------- */
+#envelope-section{display:none}
+.envelope{
+  width:280px;height:180px;
+  animation:shake .4s infinite alternate;
+  cursor:pointer;
+}
+.env-body{
+  width:100%;height:100%;
+  background:#ececff;
+  border-radius:8px;
+}
+.env-flap{
+  position:absolute;
+  width:100%;height:100%;
+  background:#d8d8ff;
+  clip-path:polygon(0 0,50% 55%,100% 0,100% 100%,0 100%);
+  transform-origin:top;
+}
+@keyframes shake{
+  from{transform:rotate(-1.2deg)}
+  to{transform:rotate(1.2deg)}
+}
+
+/* ---------- LETTER ---------- */
+#letter{display:none}
+.letter{
+  font-family:Caveat,cursive;
+  font-size:1.6rem;
+  background:rgba(15,18,35,.65);
+  backdrop-filter:blur(18px);
+  padding:50px;
+  border-radius:20px;
+  max-width:760px;
+  box-shadow:0 0 60px rgba(255,150,180,.35);
+  animation:heartbeat 2.5s infinite;
+}
+@keyframes heartbeat{
+  0%,100%{box-shadow:0 0 40px rgba(255,100,150,.25)}
+  50%{box-shadow:0 0 80px rgba(255,150,180,.55)}
+}
+
+/* ---------- FINAL ---------- */
+#final{display:none;font-size:2rem;color:#9479dd}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+<audio id="music" src="music/bg.mp3" loop></audio>
+
+<section id="intro"><h1 id="typed"></h1></section>
+<section id="slider-section"></section>
+
+<section id="cake-section">
+  <div class="cake">
+    <div class="plate"></div>
+    <div class="layer layer-bottom"></div>
+    <div class="layer layer-middle"></div>
+    <div class="layer layer-top"></div>
+    <div class="cake-text">Happy Birthday Kritika 🎉</div>
+    <div class="candle c1"></div>
+    <div class="candle c2"></div>
+    <div class="candle c3"></div>
+  </div>
+  <p style="margin-top:28px;color:#8f9cff">Make a wish & press SPACE</p>
+</section>
+
+<section id="envelope-section">
+  <div class="envelope" id="envelope">
+    <div class="env-flap"></div>
+    <div class="env-body"></div>
+  </div>
+</section>
+
+<section id="letter">
+  <div class="letter">
+    Dear Kritika,<br><br>
+    Some models learn from data.<br>
+    I learned from you.<br><br>
+    You became my most reliable architecture.<br><br>
+    Always,<br>
+    your favorite neural connection 🤍
+  </div>
+</section>
+
+<section id="final">
+  Loss → 0.0<br>
+  Accuracy → 100%<br><br>
+  Best Model: <b>You & Me</b>
+</section>
+
+<script>
+/* DOM refs (NO implicit globals) */
+const intro=document.getElementById("intro");
+const sliderSection=document.getElementById("slider-section");
+const cakeSection=document.getElementById("cake-section");
+const envelopeSection=document.getElementById("envelope-section");
+const letter=document.getElementById("letter");
+const final=document.getElementById("final");
+const music=document.getElementById("music");
+const bg=document.getElementById("bg");
+const envelope=document.getElementById("envelope");
+
+/* Typed */
+new Typed("#typed",{
+  strings:[
+    "Initializing Friendship Model…",
+    "Training on trust & chaos…",
+    "Converging shared memories…"
+  ],
+  typeSpeed:40,
+  onComplete(){
+    gsap.to(intro,{opacity:0,duration:1,delay:1,onComplete(){
+      intro.style.display="none";
+      startSlider();
+      music.play().catch(()=>{});
+    }});
+  }
+});
+
+/* THREE HEART PARTICLES */
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
+const renderer=new THREE.WebGLRenderer({canvas:bg,alpha:true});
+renderer.setSize(innerWidth,innerHeight);
+camera.position.z=35;
+
+const geo=new THREE.BufferGeometry();
+const pts=[];
+for(let i=0;i<160;i++){
+  pts.push((Math.random()-.5)*70,(Math.random()-.5)*70,(Math.random()-.5)*70);
+}
+geo.setAttribute("position",new THREE.Float32BufferAttribute(pts,3));
+scene.add(new THREE.Points(
+  geo,
+  new THREE.PointsMaterial({color:0xff9dbb,size:.8})
+));
+
+(function animate(){
+  requestAnimationFrame(animate);
+  scene.rotation.y+=0.0008;
+  renderer.render(scene,camera);
+})();
+
+/* SLIDER */
+function startSlider(){
+  sliderSection.style.display="flex";
+  const captions=[
+    "Epoch 1 — Initialization complete.",
+    "Weights adjusted through laughter.",
+    "Noise reduced. Trust amplified.",
+    "Feature importance: presence.",
+    "Overfitting avoided by honesty.",
+    "Loss minimized during chaos.",
+    "Generalization improved with time.",
+    "Stable gradients, safe silence.",
+    "Convergence felt natural.",
+    "Final checkpoint before forever."
+  ];
+  const slides=[];
+  for(let i=1;i<=10;i++){
+    const d=document.createElement("div");
+    d.className="slide";
+    d.innerHTML=`<img class="kenburns" src="images/img${i}.jpg"><p>${captions[i-1]}</p>`;
+    sliderSection.appendChild(d);
+    slides.push(d);
+  }
+  const tl=gsap.timeline({onComplete(){
+    sliderSection.style.display="none";
+    cakeSection.style.display="flex";
+  }});
+  slides.forEach(s=>{
+    tl.to(s,{opacity:1,duration:1})
+      .to(s,{opacity:1,duration:3})
+      .to(s,{opacity:0,duration:1});
+  });
+}
+
+/* CAKE */
+let blown=false;
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space"&&!blown){
+    blown=true;
+    document.querySelectorAll(".candle").forEach(c=>c.classList.add("out"));
+    gsap.to(cakeSection,{opacity:0,duration:1,onComplete(){
+      cakeSection.style.display="none";
+      envelopeSection.style.display="flex";
+    }});
+  }
+});
+
+/* ENVELOPE */
+envelope.onclick=()=>{
+  gsap.to(".env-flap",{rotateX:180,duration:1});
+  gsap.to(envelope,{opacity:0,delay:1});
+  setTimeout(()=>{
+    envelopeSection.style.display="none";
+    letter.style.display="flex";
+    gsap.from(".letter",{scaleY:0,opacity:0,duration:1.2});
+    setTimeout(()=>{
+      letter.style.display="none";
+      final.style.display="flex";
+    },6500);
+  },1400);
+};
+
+window.onresize=()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+};
+</script>
+
+</body>
+</html>
